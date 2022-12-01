@@ -48,7 +48,8 @@ class Day1 extends Command
             ->map(fn($input) => $this->stringToElf($input))
             ->each(fn($elf) => $this->challenge->addElf($elf));
 
-        $this->info($this->challenge->getHighestCalories());
+        $this->info(sprintf("Top: %s", $this->challenge->getHighestCalories()));
+        $this->info(sprintf("Top 3: %s", $this->challenge->sumCaloriesForTop(3)));
         
         return Command::SUCCESS;
     }

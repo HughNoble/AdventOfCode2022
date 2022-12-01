@@ -21,10 +21,16 @@ class Day1
 
     public function getHighestCalories(): int
     {
-        $sorted = $this->elves
-            ->sortBy(fn($e) => $e->getTotalCaloriesCarried())
-            ->reverse();
+        return $this->sumCaloriesForTop(1);
+    }
 
-        return $sorted->first()->getTotalCaloriesCarried();
+    public function sumCaloriesForTop(int $number): int
+    {
+        return $this->elves
+            ->sortBy(fn($e) => $e->getTotalCaloriesCarried())
+            ->reverse()
+            ->take($number)
+            ->map(fn($e) => $e->getTotalCaloriesCarried())
+            ->sum();
     }
 }
