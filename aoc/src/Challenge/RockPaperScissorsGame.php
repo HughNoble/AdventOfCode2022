@@ -2,7 +2,7 @@
 
 namespace Aoc\Challenge;
 
-class Day2
+class RockPaperScissorsGame
 {
     private static string $ROCK = "ROCK";
     private static string $PAPER = "PAPER";

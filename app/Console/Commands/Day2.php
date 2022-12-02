@@ -2,7 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Aoc\Challenge\Day2 as Day2Challenge;
+use Aoc\Challenge\RockPaperScissorsGame;
+use Aoc\Challenge\RockPaperScissorsPlayer;
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\FilesystemManager;
 
@@ -23,13 +24,18 @@ class Day2 extends Command
     protected $description = 'Day 2 logic';
 
     private FilesystemManager $filesystemManager;
-    private Day2Challenge $challenge;
+    private RockPaperScissorsGame $game;
+    private RockPaperScissorsPlayer $player;
 
-    public function __construct(FilesystemManager $filesystemManager, Day2Challenge $challenge)
-    {
+    public function __construct(
+        FilesystemManager $filesystemManager,
+        RockPaperScissorsGame $game,
+        RockPaperScissorsPlayer $player,
+    ) {
         parent::__construct();
         $this->filesystemManager = $filesystemManager;
-        $this->challenge = $challenge;
+        $this->game = $game;
+        $this->player = $player;
     }
 
     /**
@@ -59,8 +65,11 @@ class Day2 extends Command
             return 0;
         }
 
-        return $this->challenge->scoreRound(
-            substr($input, 2, 1),
+        return $this->game->scoreRound(
+            $this->player->pickResponse(
+                substr($input, 2, 1),
+                substr($input, 0, 1)
+            ),
             substr($input, 0, 1)
         );
     }

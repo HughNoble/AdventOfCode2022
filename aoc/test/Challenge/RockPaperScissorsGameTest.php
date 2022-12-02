@@ -2,10 +2,10 @@
 
 namespace Aoc\Test;
 
-use Aoc\Challenge\Day2;
+use Aoc\Challenge\RockPaperScissorsGame;
 use PHPUnit\Framework\TestCase;
 
-class Day2Test extends TestCase
+class RockPaperScissorsGameTest extends TestCase
 {
     private static string $PLAYER_1_ROCK = "A";
     private static string $PLAYER_1_PAPER = "B";
@@ -27,12 +27,12 @@ class Day2Test extends TestCase
     private static int $BASE_SCORE_PAPER = 2;
     private static int $BASE_SCORE_SCISSORS = 3;
 
-    private Day2 $challenge;
+    private RockPaperScissorsGame $challenge;
 
     public function __construct()
     {
         parent::__construct();
-        $this->challenge = new Day2;
+        $this->challenge = new RockPaperScissorsGame;
     }
 
     public function testBothRockDraw()
