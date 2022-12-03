@@ -45,12 +45,20 @@ class Day3 extends Command
         $items = collect(explode("\n", $contents))
             ->filter(fn($item) => strlen($item) > 0)
             ->map(fn($item) => str_split($item))
-            ->filter(fn($item) => count($item) > 0)
-            ->map(fn($item) => $this->challenge->getCommonItems($item))
+            ->filter(fn($item) => count($item) > 0);
+
+        $summedItems = $items->map(fn($item) => $this->challenge->getCommonItems($item))
             ->map(fn($items) => $this->challenge->scoreItems($items))
             ->sum();
         
-        $this->info("Sum: " . $items);
+        $this->info("Sum: " . $summedItems);
+
+        $sumBadges = $items->split(count($items) / 3)
+            ->map(fn($item) => $this->challenge->getGroupBadge($item->toArray()))
+            ->map(fn($item) => $this->challenge->scoreItem($item))
+            ->sum();
+
+        $this->info("Badges: " . $sumBadges);
 
         return Command::SUCCESS;
     }

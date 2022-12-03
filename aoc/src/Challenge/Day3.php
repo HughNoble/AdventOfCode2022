@@ -17,6 +17,17 @@ class Day3
             ->toArray();
     }
 
+    public function getGroupBadge(array $group): string
+    {
+        $elf1 = collect($group[0]);
+        $elf2 = collect($group[1]);
+        $elf3 = collect($group[2]);
+
+        return (string) $elf1->filter(fn($item) => $elf2->contains($item))
+            ->filter(fn($item) => $elf3->contains($item))
+            ->first();
+    }
+
     public function scoreItem(string $item): int
     {
         $map = [];
