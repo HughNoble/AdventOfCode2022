@@ -39,12 +39,20 @@ class Day4 extends Command
         $contents = $this->filesystemManager->disk('local')
             ->get('input/day4/part1');
 
-        $overlaps = collect(explode("\n", $contents))
-            ->map(fn($item) => $this->stringToRanges($item))
+        $pairs = collect(explode("\n", $contents))
+            ->map(fn($item) => $this->stringToRanges($item));
+        
+        $overlaps = $pairs
             ->filter(fn($item) => $this->fullyOverlaps($item))
             ->count();
 
-        $this->info("Pairs overlapped: " . $overlaps);
+        $this->info("Pairs fully overlapped: " . $overlaps);
+        
+        $partiallyOverlapped = $pairs
+            ->filter(fn($item) => $this->partiallyOrFullyOverlaps($item))
+            ->count();
+        
+        $this->info("Pairs partially overlapped " . $partiallyOverlapped);
 
         return Command::SUCCESS;
     }
@@ -61,6 +69,26 @@ class Day4 extends Command
         $elf1 = $pair[0];
         $elf2 = $pair[1];
 
+        return $this->pairFullyContains($elf1, $elf2)
+            || $this->pairFullyContains($elf2, $elf1);
+    }
+
+    private function pairFullyContains($elf1, $elf2)
+    {
+        $elf1Start = (int) $elf1[0];
+        $elf1End = (int) $elf1[1];
+
+        $elf2Start = (int) $elf2[0];
+        $elf2End = (int) $elf2[1];
+
+        return $elf1Start >= $elf2Start && $elf1End <= $elf2End;
+    }
+
+    private function partiallyOrFullyOverlaps(array $pair): bool
+    {
+        $elf1 = $pair[0];
+        $elf2 = $pair[1];
+
         return $this->pairContains($elf1, $elf2)
             || $this->pairContains($elf2, $elf1);
     }
@@ -73,6 +101,14 @@ class Day4 extends Command
         $elf2Start = (int) $elf2[0];
         $elf2End = (int) $elf2[1];
 
-        return $elf1Start >= $elf2Start && $elf1End <= $elf2End;
+        if ($elf1Start > $elf2End) {
+            return false;
+        }
+
+        if ($elf1End < $elf2Start) {
+            return false;
+        }
+
+        return $elf1Start >= $elf2Start || $elf1End <= $elf2End;
     }
 }
