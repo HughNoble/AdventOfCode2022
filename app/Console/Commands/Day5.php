@@ -106,16 +106,20 @@ class Day5 extends Command
         list($move, $from, $to) = $procedure;
         $stacks = clone($this->stacks);
 
+        $itemsInFlight = [];
         for ($i = 0; $i < $move; $i++) {
-            $itemInFlight = " ";
             foreach ($stacks as $key => $line) {
                 if ($line->get($from - 1) !== " ") {
-                    $itemInFlight = $line->get($from - 1);
+                    $itemsInFlight[] = $line->get($from - 1);
                     $stacks[$key] = $line->replace([$from - 1 => " "]);
                     break;
                 }
             }
-            
+        }
+
+        $itemsInFlight = array_reverse($itemsInFlight);
+        
+        foreach ($itemsInFlight as $itemInFlight) {
             $firstLine = $stacks->first();
             
             // Special case for when a new line is required
