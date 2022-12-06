@@ -8,6 +8,9 @@ use Illuminate\Filesystem\FilesystemManager;
 
 class Day6 extends Command
 {
+    private static int $PACKET_SIZE_PACKET_START = 4;
+    private static int $PACKET_SIZE_MESSAGE_START = 14;
+
     /**
      * The name and signature of the console command.
      *
@@ -41,24 +44,31 @@ class Day6 extends Command
             ->get('input/day6/input');
         
         $input = str_split($contents);
+
+        $packet_start_position = $this->findPositionOfPacketStart(
+            self::$PACKET_SIZE_PACKET_START,
+            $input
+        );
         
-        $this->info("Start " . $this->getStartIndex($input));
+        $this->info("Start " . $packet_start_position);
+
+        $message_start_position = $this->findPositionOfPacketStart(
+            self::$PACKET_SIZE_MESSAGE_START,
+            $input
+        );
+        
+        $this->info("Message " . $message_start_position);
 
         return Command::SUCCESS;
     }
 
-    private function getStartIndex(array $input): int
+    private function findPositionOfPacketStart(int $num_unique, array $input): int
     {
-        foreach ($input as $key => $char) {
-            $buffer = collect([
-                $char,
-                $input[$key + 1],
-                $input[$key + 2],
-                $input[$key + 3],
-            ]);
+        for ($i = 0; $i <= count($input); $i++) {
+            $buffer = collect(array_slice($input, $i, $num_unique));
 
-            if ($buffer->unique()->count() === 4) {
-                return $key + 4;
+            if ($buffer->unique()->count() === $num_unique) {
+                return $i + $num_unique;
             }
         }
     }
