@@ -8,6 +8,9 @@ use Illuminate\Support\Collection;
 
 class Day7 extends Command
 {
+    private static int $DISK_SIZE = 70000000;
+    private static int $UPDATE_SIZE = 30000000;
+
     /**
      * The name and signature of the console command.
      *
@@ -46,6 +49,15 @@ class Day7 extends Command
             ->sum();
 
         $this->info($part1);
+
+        $freeSpace = self::$DISK_SIZE - (int) $filesystem->get("/");
+        $requiredSpace = self::$UPDATE_SIZE - $freeSpace;
+        
+        $part2 = $filesystem->where(fn($filesize) => $filesize >= $requiredSpace)
+            ->sort()
+            ->first();
+        
+        $this->info($part2);
 
         return Command::SUCCESS;
     }
