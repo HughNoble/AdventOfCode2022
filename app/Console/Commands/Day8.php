@@ -41,12 +41,8 @@ class Day8 extends Command
             ->get('input/day8/input');
         
         $horizontalGrid = $this->parseHorizontal(explode("\n", $contents));
-        $verticalGrid = $this->horizontalGridToVertical($horizontalGrid);
-
-        $visibleHorizontally = $this->getHorizontallyVisiblePositions($horizontalGrid);
-        $visibleVertically = $this->getHorizontallyVisiblePositions($verticalGrid);
         
-        $part1 = $visibleHorizontally->merge($visibleVertically)->unique()->count();
+        $part1 = $this->countVisibleFromOutsideInGrid($horizontalGrid);
         $this->info("Part 1: " . $part1);
 
         $part2 = $this->findBestScenicValue($horizontalGrid);
@@ -59,49 +55,44 @@ class Day8 extends Command
     {
         return (new Collection($lines))
             ->map(fn($line) => str_split($line))
-            ->map(fn($line) => new Collection($line))
-            ->map(fn($line, $key) => $line->map(fn($item, $index) => $key . "-" . $index . "-" . $item));
+            ->map(fn($line) => new Collection($line));
     }
 
-    private function horizontalGridToVertical(Collection $horizontalGrid): Collection
+    private function countVisibleFromOutsideInGrid(Collection $grid): int
     {
-        return $horizontalGrid
-            ->keys()
-            ->map(fn($item) => $horizontalGrid->pluck($item));
-    }
+        $xSize = $grid->first()->count();
+        $ySize = $grid->count();
 
-    private function getHorizontallyVisiblePositions(Collection $grid): Collection
-    {
-        return $grid
-            ->map(fn($item) => $this->getVisibleInRow($item))
-            ->flatten();
-    }
+        $visible = 0;
 
-    private function getVisibleInRow(Collection $row): Collection
-    {
-        $previous = -1;
+        for ($x = 0; $x < $xSize; $x++) {
+            for ($y = 0; $y < $ySize; $y++) {
+                $myValue = $this->getHeightForPosition($grid, $x, $y);
+                
+                $visibleFromLeft = $this->calculateOutsideVisibility(
+                    fn ($i) => $this->getHeightForPosition($grid, $x, $y + $i),
+                    $myValue
+                );
+                $visibleFromRight = $this->calculateOutsideVisibility(
+                    fn ($i) => $this->getHeightForPosition($grid, $x, $y - $i),
+                    $myValue
+                );
+                $visibleFromTop = $this->calculateOutsideVisibility(
+                    fn ($i) => $this->getHeightForPosition($grid, $x - $i, $y),
+                    $myValue
+                );
+                $visibleFromBottom = $this->calculateOutsideVisibility(
+                    fn ($i) => $this->getHeightForPosition($grid, $x + $i, $y),
+                    $myValue
+                );
 
-        $counted = [];
-
-        foreach ($row as $key => $value) {
-            $height = substr($value, -1);
-            if ($height > $previous) {
-                $counted[$key] = $value;
-                $previous = $height;
+                if ($visibleFromLeft || $visibleFromRight || $visibleFromTop || $visibleFromBottom) {
+                    $visible++;
+                }
             }
         }
 
-        $previous = -1;
-
-        foreach ($row->reverse() as $key => $value) {
-            $height = substr($value, -1);
-            if ($height > $previous) {
-                $counted[$key] = $value;
-                $previous = $height;
-            }
-        }
-
-        return collect($counted)->flatten();
+        return $visible;
     }
 
     private function findBestScenicValue(Collection $grid)
@@ -151,11 +142,9 @@ class Day8 extends Command
             return null;
         }
 
-        $entry = $grid->flatten()
-            ->filter(fn($item) => strstr($item, sprintf("%d-%d-", $x, $y)) !== false)
-            ->first();
+        $entry = $grid->get($x, new Collection())->get($y);
         
-        return $entry ? explode("-", $entry)[2] : null;
+        return $entry;
     }
 
     private function calculateVisibility(callable $operation, int $myValue)
@@ -179,5 +168,25 @@ class Day8 extends Command
         }
 
         return $visible;
+    }
+
+    private function calculateOutsideVisibility(callable $operation, int $myValue)
+    {
+        $i = 0;
+
+        while(true) {
+            $i++;
+            $value = $operation($i);
+
+            if ($value === null) {
+                break;
+            }
+            
+            if ($value >= $myValue) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
