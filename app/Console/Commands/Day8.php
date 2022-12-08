@@ -48,6 +48,9 @@ class Day8 extends Command
         
         $part1 = $visibleHorizontally->merge($visibleVertically)->unique()->count();
         $this->info("Part 1: " . $part1);
+
+        $part2 = $this->findBestScenicValue($horizontalGrid);
+        $this->info("Part 2: " . $part2);
         
         return Command::SUCCESS;
     }
@@ -99,5 +102,82 @@ class Day8 extends Command
         }
 
         return collect($counted)->flatten();
+    }
+
+    private function findBestScenicValue(Collection $grid)
+    {
+        $xSize = $grid->first()->count();
+        $ySize = $grid->count();
+
+        $bestScenicValue = 0;
+
+        for ($x = 1; $x < $xSize; $x++) {
+            for ($y = 1; $y < $ySize; $y++) {
+                $myValue = $this->getHeightForPosition($grid, $x, $y);
+                
+                $valueRight = $this->calculateVisibility(
+                    fn($i) => $this->getHeightForPosition($grid, $x, $y + $i),
+                    $myValue
+                );
+                
+                $valueLeft = $this->calculateVisibility(
+                    fn($i) => $this->getHeightForPosition($grid, $x, $y - $i),
+                    $myValue
+                );
+
+                $valueDown = $this->calculateVisibility(
+                    fn($i) => $this->getHeightForPosition($grid, $x + $i, $y),
+                    $myValue
+                );
+
+                $valueUp = $this->calculateVisibility(
+                    fn($i) => $this->getHeightForPosition($grid, $x - $i, $y),
+                    $myValue
+                );
+
+                $finalValue = $valueUp * $valueLeft * $valueRight * $valueDown;
+                if ($finalValue > $bestScenicValue) {
+                    $bestScenicValue = $finalValue;
+                }
+            }
+        }
+
+        return $bestScenicValue;
+    }
+
+    private function getHeightForPosition(Collection $grid, int $x, int $y): ?int
+    {
+        if ($x < 0 || $y < 0) {
+            return null;
+        }
+
+        $entry = $grid->flatten()
+            ->filter(fn($item) => strstr($item, sprintf("%d-%d-", $x, $y)) !== false)
+            ->first();
+        
+        return $entry ? explode("-", $entry)[2] : null;
+    }
+
+    private function calculateVisibility(callable $operation, int $myValue)
+    {
+        $i = 0;
+        $visible = 0;
+
+        while(true) {
+            $i++;
+            $value = $operation($i);
+
+            if ($value === null) {
+                break;
+            }
+
+            $visible++;
+            
+            if ($value >= $myValue) {
+                break;
+            }
+        }
+
+        return $visible;
     }
 }
