@@ -44,33 +44,41 @@ class Day9 extends Command
         
         $lines = explode("\n", $contents);
 
-        $this->debug = true;
+        $this->debug = false;
 
         $positions = $this->parsePositions($lines);
-        $part1 = $this->getTailPositions($positions);
+        $part1 = $this->getTailPositions($positions, 1);
 
         $this->info($part1->count());
+
+        $part2 = $this->getTailPositions($positions, 9);
+
+        $this->info($part2->count());
 
         return Command::SUCCESS;
     }
 
-    private function getTailPositions(Collection $headPositions): Collection
+    private function getTailPositions(Collection $positions, int $length): Collection
     {
-        $lastPosition = [0, 0];
+        foreach (range(1, $length) as $i) {
+            $lastPosition = [0, 0];
 
-        return $headPositions->map(function($item) use (&$lastPosition) {
-            $currentTailPosition = $lastPosition;
+            $positions = $positions->map(function($item) use (&$lastPosition) {
+                $currentTailPosition = $lastPosition;
 
-            $lastPosition = $this->moveTail($item, $currentTailPosition);
+                $lastPosition = $this->moveTail($item, $currentTailPosition);
 
-            if ($this->debug) {
-                $this->info(sprintf("Head %d:%d", $item[0], $item[1]));
-                $this->info(sprintf("Tail %d:%d", $lastPosition[0], $lastPosition[1]));
-                $this->info("");
-            }
+                if ($this->debug) {
+                    $this->info(sprintf("Head %d:%d", $item[0], $item[1]));
+                    $this->info(sprintf("Tail %d:%d", $lastPosition[0], $lastPosition[1]));
+                    $this->info("");
+                }
 
-            return $lastPosition;
-        })->unique();
+                return $lastPosition;
+            });
+        }
+
+        return $positions->unique();
     }
 
     private function moveTail($headPosition, $tailPosition): array
