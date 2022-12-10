@@ -47,8 +47,9 @@ class Day10 extends Command
         
         $lines = explode("\n", $contents);
 
-        $stack = collect($this->displayProcessor->processInstructions($lines))
-            ->map(fn($x, $i) => $x * $i);
+        $fullStack = collect($this->displayProcessor->processInstructions($lines));
+        
+        $stack = $fullStack->map(fn($x, $i) => $x * $i);
 
         $first20 = $stack->shift(20);
         $filtered = collect($first20->last())
@@ -57,6 +58,21 @@ class Day10 extends Command
         $part1 = $filtered->sum();
 
         $this->info($part1);
+
+        $line = "";
+
+        foreach ($fullStack as $cycle => $position) {
+            $drawing = strlen($line) + 1;
+
+            $line .= ($drawing >= (int) $position && $drawing <= (int) $position + 2)
+                ? "#"
+                : ".";
+            
+            if ((int) $cycle %40 === 0) {
+                $this->info($line);
+                $line = "";
+            }
+        }
 
         return Command::SUCCESS;
     }
