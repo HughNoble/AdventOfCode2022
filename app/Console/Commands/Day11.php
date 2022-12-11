@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Filesystem\FilesystemManager;
+use Illuminate\Support\Collection;
 
 class Day11 extends Command
 {
@@ -22,6 +23,8 @@ class Day11 extends Command
     protected $description = 'Monkey business';
 
     private FilesystemManager $filesystemManager;
+
+    private bool $debug = false;
 
     public function __construct(FilesystemManager $filesystemManager)
     {
@@ -42,17 +45,38 @@ class Day11 extends Command
         $monkeys = collect(explode("\n\n", $contents))
             ->map(fn($item) => $this->stringToMonkey($item));
 
-        $debug = false;
-        
-        foreach (range(1, 20) as $round) {
+        $this->debug = false;
+
+        $mod = $this->getMod($monkeys);
+
+        $processedMonkeys = $this->processRounds($monkeys, 20, 3, $mod);
+
+        $this->info("Part 1: " . $this->calculateMonkeyBusiness($processedMonkeys));
+
+        $monkeys = collect(explode("\n\n", $contents))
+            ->map(fn($item) => $this->stringToMonkey($item));
+
+        $processedMonkeysPart2 = $this->processRounds($monkeys, 10000, 1, $mod);
+
+        $this->info("Part 2: " . $this->calculateMonkeyBusiness($processedMonkeysPart2));
+
+        return Command::SUCCESS;
+    }
+
+    private function processRounds(Collection $monkeys, int $numRounds, int $worryLevelModifier, int $mod): Collection
+    {
+        foreach (range(1, $numRounds) as $round) {
             foreach ($monkeys as $key => $monkey) {
                 while ($baseWorryLevel = $monkey["items"]->shift()) {
                     $inspectionWorryLevel = $this->calculateWorryLevel(
                         $monkey["operation"],
-                        $baseWorryLevel
+                        $baseWorryLevel,
+                        $worryLevelModifier === 1 ? $mod : null
                     );
 
-                    $finalWorryLevel = (int) floor($inspectionWorryLevel / 3);
+                    $finalWorryLevel = $worryLevelModifier === 1
+                        ? $inspectionWorryLevel
+                        : (int) floor($inspectionWorryLevel / $worryLevelModifier);
 
                     $destination = $finalWorryLevel % $monkey["testDivisibleBy"] === 0
                         ? $monkey["trueDestination"]
@@ -62,7 +86,7 @@ class Day11 extends Command
 
                     $monkey["inspectedItems"]++;
 
-                    if ($debug) {
+                    if ($this->debug) {
                         $this->info("Monkey: " . $key);
                         $this->info("Inspecting item with worry level: " . $baseWorryLevel);
                         $this->info("Worry info whilst inspecting: " . $inspectionWorryLevel);
@@ -76,16 +100,17 @@ class Day11 extends Command
             }
         }
 
-        $ordered = $monkeys->sortBy("inspectedItems");
-
-        $monkeyBusiness = $ordered->pop()["inspectedItems"] * $ordered->pop()["inspectedItems"];
-
-        $this->info("Part 1: " . $monkeyBusiness);
-
-        return Command::SUCCESS;
+        return $monkeys;
     }
 
-    private function calculateWorryLevel(array $operation, int $baseWorryLevel): int
+    private function calculateMonkeyBusiness(Collection $monkeys): int
+    {
+        $ordered = $monkeys->sortBy("inspectedItems");
+
+        return $ordered->pop()["inspectedItems"] * $ordered->pop()["inspectedItems"];
+    }
+
+    private function calculateWorryLevel(array $operation, int $baseWorryLevel, ?int $mod): int
     {
         $comparisonLevel = $operation[2] === "old" ? $baseWorryLevel : (int) $operation[2];
 
@@ -100,7 +125,26 @@ class Day11 extends Command
                 break;
         }
 
+        if ($mod) {
+            $worryLevel = $worryLevel % $mod;
+        }
+
         return $worryLevel;
+    }
+
+    private function getMod(Collection $monkeys): int
+    {
+        $mod = 0;
+
+        foreach ($monkeys as $monkey) {
+            if ($mod === 0) {
+                $mod = $monkey["testDivisibleBy"];
+            } else {
+                $mod *= $monkey["testDivisibleBy"];
+            }
+        }
+
+        return $mod;
     }
 
     private function stringToMonkey(string $monkeyString): array
