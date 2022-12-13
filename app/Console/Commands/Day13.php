@@ -52,7 +52,28 @@ class Day13 extends Command
             ->sum();
         
         $this->info("Part 1: " . $part1);
+
+        $sorted = $pairs->flatten(1)
+            ->add([6])
+            ->add([2])
+            ->sort(fn($left, $right) => $this->compare($left, $right))
+            ->reverse()
+            ->values();
         
+        $decoderKey1 = $sorted->filter(fn($item) => $item === [2])
+            ->keys()
+            ->map(fn($item) => $item + 1)
+            ->first();
+
+        $decoderKey2 = $sorted->filter(fn($item) => $item === [6])
+            ->keys()
+            ->map(fn($item) => $item + 1)
+            ->first();
+
+        $part2 = $decoderKey1 * $decoderKey2;
+
+        $this->info("Part 2: " . $part2);
+
         return Command::SUCCESS;
     }
 
